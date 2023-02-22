@@ -1,0 +1,239 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\NewDocumentCommand{\Qubit}{ O{1} }{%
+	\ensuremath{%
+		\mathbf{%
+			#1%
+		}%
+	}%
+}
+
+\NewDocumentCommand{\QState}{ m }{%
+	\ensuremath{%
+		|#1\rangle%
+	}%
+}
+\begin{document}	
+	
+	\verb|qc.mct| implements a Multi-Controlled-U gate, also known as the Toffoli gate, which performs a unitary operation on the target qubit depending on the values of the control qubits. This can be expressed mathematically as follows:
+	\[
+	U_{mct} 
+	= 
+	I \otimes 
+	I \otimes 
+	I 
+	\cdots 
+	I \otimes 
+	I + 
+	\Qubit \otimes 
+	\Qubit \otimes 
+	\cdots 
+	\Qubit \otimes 
+	X
+	\]        
+	where \Qubit{} represents a qubit in state \QState{1}, and \( X \) represents the Pauli-X (NOT) gate.
+	
+	\begin{align*}
+		& qc.mct( \\
+		& \quad control\_qubits=qc.qregs[1], \\
+		& \quad target\_qubit=qc.qregs[0][idx], \\
+		& )
+	\end{align*} 
+	
+	The above \verb|qc.mct| gate is equivalent to the following three consecutive gates constructed using U3 gates and CNOT gates.
+	
+	\begin{align*}
+		& qc.append(U3Gate(np.pi/2,0,np.pi), [qc.qregs[0][idx]], []) \\ 
+		& qc.append(CNOT(qc.qregs[1][0], qc.qregs[0][idx]), [], []) \\ 
+		& qc.append(U3Gate(-np.pi/2,0,np.pi), [qc.qregs[0][idx]], []) \\
+	\end{align*}
+	
+	The code using \verb|qc.append(U3Gate(...), [], [])| implements a sequence of gates equivalent to the Toffoli gate, using the single-qubit gates U3 and CNOT. The U3 gate performs a general single-qubit rotation and can be expressed as: \\
+	\[
+	U3(\theta, \phi, \lambda) 
+	= 
+	\begin{bmatrix} 
+		\cos(\theta/2) 
+		& -e^{i\lambda}\sin(\theta/2) 
+		\\ 
+		e^{i\phi}\sin(\theta/2) 
+		& e^{i(\phi+\lambda)}\cos(\theta/2) 
+	\end{bmatrix}
+	\]
+	
+	The code uses the U3 gate to apply a rotation of \( \pi/2 \) around the Z-axis followed by a CNOT gate, and then another U3 gate to undo the first rotation. These sequences of gates can be expressed mathematically as: \\
+	\[
+	U3(\pi/2, 0, \pi) 
+	= 
+	\begin{bmatrix} 
+		i/\sqrt{2} 
+		& -1/\sqrt{2} 
+		\\ 
+		-1/\sqrt{2} 
+		& -i/\sqrt{2} 
+	\end{bmatrix}
+	\]
+	\[
+	CNOT 
+	= 
+	\begin{bmatrix} 
+		1 & 0 & 0 & 0 \\ 
+		0 & 1 & 0 & 0 \\ 
+		0 & 0 & 0 & 1 \\ 
+		0 & 0 & 1 & 0 
+	\end{bmatrix}
+	\]
+	\[
+	U3(-\pi/2, 0, \pi) 
+	= 
+	\begin{bmatrix} 
+		i/\sqrt{2} 
+		& 1/\sqrt{2} 
+		\\ 
+		1/\sqrt{2} 
+		& i/\sqrt{2} 
+	\end{bmatrix}
+	\]
+	
+	These sequences of gates are equivalent in functionality to the Toffoli gate.
+	
+	To show the equivalence of the sequence of gates: \( U3(\pi/2, 0, \pi) \), \( CNOT \), and \( U3(-\pi/2, 0, \pi) \) to the Toffoli gate, we can apply the matrices of each gate on a control qubit and target qubit, and see what the final result is. 
+	Let's say we start with the control qubit in state \QState{0} and target qubit in state \QState{1}. 
+	Then the matrix multiplication gives us:
+	\[
+	U3(\pi/2, 0, \pi) 
+	\QState{1} 
+	= 
+	\begin{bmatrix} 
+		i/\sqrt{2} 
+		& -1/\sqrt{2} 
+		\\ 
+		-1/\sqrt{2} 
+		& -i/\sqrt{2} 
+	\end{bmatrix}
+	\begin{bmatrix} 
+		0 \\ 
+		1 
+	\end{bmatrix} 
+	= 
+	\frac{1}{\sqrt{2}} 
+	\begin{bmatrix} 
+		-1 \\ 
+		i 
+	\end{bmatrix}
+	\]
+	
+	Next, applying the CNOT gate with the control qubit in state \QState{0}: \\
+	\[
+	CNOT 
+	\left(
+	\frac{1}{\sqrt{2}} 
+	\begin{bmatrix} 
+		-1 \\ 
+		i 
+	\end{bmatrix} 
+	\otimes 
+	\QState{0}
+	\right) 
+	= 
+	\begin{bmatrix} 
+		1 & 0 & 0 & 0 \\ 
+		0 & 1 & 0 & 0 \\ 
+		0 & 0 & 0 & 1 \\ 
+		0 & 0 & 1 & 0 
+	\end{bmatrix} 
+	\begin{bmatrix} 
+		-\frac{1}{\sqrt{2}} \\ 
+		0 \\ 
+		\frac{i}{\sqrt{2}} \\ 
+		0 
+	\end{bmatrix} 
+	= 
+	\frac{1}{\sqrt{2}} 
+	\begin{bmatrix} 
+		-\frac{1}{\sqrt{2}} \\ 
+		0 \\ 
+		0 \\ 
+		\frac{i}{\sqrt{2}} 
+	\end{bmatrix}
+	\]
+	
+	Finally, applying \( U3(-\pi/2, 0, \pi) \):
+	\[       
+	U3(-\pi/2, 0, \pi) 
+	\left(
+	\frac{1}{\sqrt{2}} 
+	\begin{bmatrix} 
+		-\frac{1}{\sqrt{2}} \\
+		0 \\ 
+		0 \\ 
+		\frac{i}{\sqrt{2}} 
+	\end{bmatrix}
+	\right) 
+	= 
+	\begin{bmatrix} 
+		i/\sqrt{2} 
+		& 1/\sqrt{2} 
+		\\ 
+		1/\sqrt{2} 
+		& i/\sqrt{2} 
+	\end{bmatrix} 
+	\begin{bmatrix} 
+		-\frac{1}{2} \\
+		0 \\
+		0 \\ 
+		\frac{i}{2} 
+	\end{bmatrix} 
+	= 
+	\frac{1}{2} 
+	\begin{bmatrix} 
+		i \\ 
+		1 \\ 
+		1 \\
+		i 
+	\end{bmatrix} 
+	= 
+	\frac{1}{2} 
+	\left(
+	\QState{0} + \QState{1}
+	\right) 
+	\left(
+	\QState{0} + i\QState{1}
+	\right)
+	\] \\
+	
+	We can see that the final result of the sequence of gates is equivalent to the Toffoli gate, where the control qubit is flipped only if both the control and target qubits are in the state \QState{1}.  \\
+	
+	The matrix representation of the CNOT gate is not as written in the equation. A standard matrix representation of the CNOT gate on two qubits is: \\
+	\[
+	CNOT 
+	= 
+	\begin{bmatrix} 
+		1 & 0 & 0 & 0 \\ 
+		0 & 1 & 0 & 0 \\ 
+		0 & 0 & 0 & 1 \\ 
+		0 & 0 & 1 & 0 
+	\end{bmatrix}
+	\]
+	
+	It operates on the two-qubit state vector as follows:
+	\[        
+	\begin{bmatrix} 
+		a \\ 
+		b \\ 
+		c \\ 
+		d 
+	\end{bmatrix} 
+	\rightarrow 
+	\begin{bmatrix} 
+		a \\
+		b \\ 
+		c \oplus a \\ 
+		d \oplus b 
+	\end{bmatrix}
+	\]
+	where \( a \) and \( b \) are the amplitudes of the control qubit being in the state \QState{0} and \QState{1}, respectively, and \( c \) and \( d \) are the amplitudes of the target qubit being in the state \QState{0} and \QState{1}, respectively. 
+	The CNOT gate flips the phase of the target qubit if and only if the control qubit is in the state \QState{1}.
+	
+\end{document}
