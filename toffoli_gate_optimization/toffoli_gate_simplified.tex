@@ -203,9 +203,63 @@
 	\right)
 	\] \\
 	
-	We can see that the final result of the sequence of gates is equivalent to the Toffoli gate, where the control qubit is flipped only if both the control and target qubits are in the state \QState{1}.  \\
+	We can see that the final result of the sequence of gates is equivalent to the Toffoli gate, where the target qubit is flipped only if both control qubits are in the state \QState{1}.  Therefore, the given equation resembles a Toffoli gate with one of its inputs in the superposition state. \\
 	
-	The matrix representation of the CNOT gate is not as written in the equation. A standard matrix representation of the CNOT gate on two qubits is: \\
+	This final equation above is a simple multiplication of two qubits, where the first qubit is the equal superposition of state $\QState{0}$ and $\QState{1}$, and the second qubit is the superposition of state $\QState{0}$ and $i\QState{1}$. \\
+	
+	If we expand this product, we get:
+	
+	\begin{align*}
+		&\frac{1}{2} \left(\QState{0}\QState{0} + i\QState{0}\QState{1} + \QState{1}\QState{0} + i\QState{1}\QState{1}\right) \
+		=& \frac{1}{2} \QState{0}\QState{0} + \frac{i}{2} \QState{0}\QState{1} + \frac{1}{2} \QState{1}\QState{0} + \frac{i}{2} \QState{1}\QState{1}
+	\end{align*}
+	
+	This can be seen as a controlled-NOT (CNOT) gate with a control qubit $\frac{1}{\sqrt{2}}\left(\QState{0} + \QState{1}\right)$ and a target qubit $\frac{1}{\sqrt{2}}\left(\QState{0} + i\QState{1}\right)$, as follows: \\
+
+	\[--H----@-- \]
+	\[\qquad \qquad \quad | \]
+	\[-------X--\]
+
+	where the Hadamard gate (H) acts on the control qubit before the CNOT gate, which is controlled by the control qubit and applies the NOT gate to the target qubit if the control qubit is $\QState{1}$. \\
+	
+	Note that the CNOT gate acts on two qubits, a control qubit and a target qubit. In this case, the control qubit is in the initial state $\frac{1}{\sqrt{2}}(\QState{0} + \QState{1})$ and the target qubit is in the state $\QState{1}$. When the control qubit is in the state $\QState{0}$, the CNOT gate leaves the target qubit unchanged. However, when the control qubit is in the state $\QState{1}$, the CNOT gate flips the state of the target qubit. \\
+	
+	Now, since the control qubit is in the state $\frac{1}{\sqrt{2}}(\QState{0} + \QState{1})$, we need to consider the two possible outcomes when the CNOT gate is applied to the pair of qubits: \\
+	
+	When the control qubit is in the state $\QState{0}$, the target qubit is left unchanged, so the overall state is $\frac{1}{\sqrt{2}}(\QState{0} + \QState{1}) \otimes \QState{1} = \frac{1}{\sqrt{2}}(\QState{01})$. \\
+	
+	When the control qubit is in the state $\QState{1}$, the target qubit is flipped, so the overall state becomes $\frac{1}{\sqrt{2}}(\QState{0} + \QState{1}) \otimes X\QState{1} = \frac{1}{\sqrt{2}}(\QState{0} - \QState{1})$. \\
+	
+	Therefore, after applying the CNOT gate, the target qubit is in the superposition $\frac{1}{\sqrt{2}}(\QState{0} + \QState{1})$ if the control qubit is in the state $\QState{0}$, and in the superposition $\frac{1}{\sqrt{2}}(\QState{0} - \QState{1})$ if the control qubit is in the state $\QState{1}$. \\
+	
+	At this point, the Hadamard gate is applied to the control qubit, which transforms the state of the control qubit from $\frac{1}{\sqrt{2}}(\QState{0} + \QState{1})$ to $\frac{1}{\sqrt{2}}(\QState{0} + i\QState{1})$. This, in turn, puts the target qubit into the state $\frac{1}{\sqrt{2}}(\QState{0} + i\QState{1})$, since the state of the target qubit is conditioned on the state of the control qubit. \\
+	
+	The Hadamard gate is defined as follows:
+	\[
+    \frac{1}{\sqrt{2}} \begin{bmatrix}
+	1 & 1 \\
+	1 & -1
+	\end{bmatrix}
+    \]
+
+	We start with the state of the control qubit after the Hadamard gate is applied:
+	
+	\begin{align*}
+		\frac{1}{\sqrt{2}}(\QState{0} + \QState{1}) \rightarrow \frac{1}{\sqrt{2}}(\QState{0} + i\QState{1})
+	\end{align*}
+	
+	To see why this is the case, we apply the Hadamard gate to the $\QState{1}$ state:
+	
+	\begin{align*}
+		H\QState{1} &= \frac{1}{\sqrt{2}}(\QState{0} - \QState{1}) \\
+		&= \frac{1}{\sqrt{2}}(\QState{0} + i\QState{1}) - i\frac{1}{\sqrt{2}}(\QState{0} - i\QState{1})
+	\end{align*}
+	
+	The last line is obtained by multiplying the top and bottom by $i$. Since $i$ is a global phase, the state on the second line is equivalent to the state on the first line. \\
+	
+	Now, we apply the CNOT gate to the target qubit, with the control qubit in state $\QState{0}$. Since the control qubit is in the state $\frac{1}{\sqrt{2}}(\QState{0} + \QState{1})$, the CNOT gate leaves the target qubit in the state $\frac{1}{\sqrt{2}}(\QState{0} + i\QState{1})$. \\
+	
+	Note: The matrix representation of the CNOT gate is not as written in the equation. A standard matrix representation of the CNOT gate on two qubits is: \\
 	\[
 	CNOT 
 	= 
